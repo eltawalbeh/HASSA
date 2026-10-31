@@ -31,6 +31,7 @@ export function App() {
   const [engine, setEngine] = useState<EngineStatus>(EMPTY_ENGINE);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [connecting, setConnecting] = useState(true);
+  const [initializing, setInitializing] = useState(true);
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState<string|null>(null);
   const [draft, setDraft] = useState('');
@@ -68,7 +69,7 @@ export function App() {
     } catch (e) { setEngine({ connected: false, version: null, error: String(e) }); setModels([]); }
     finally { setConnecting(false); }
   }, []);
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => { void refresh().finally(()=>setInitializing(false)); }, [refresh]);
   const filtered = useMemo(() => conversations.filter(c => (c.title + ' ' + c.messages.map(m => m.content).join(' ')).toLocaleLowerCase().includes(query.toLocaleLowerCase())), [conversations, query]);
 
   function patchConversation(id: string, apply: (c: Conversation) => Conversation) {
@@ -140,6 +141,7 @@ export function App() {
   }
   const statusText = connecting ? i.loading : !engine.connected ? i.offline : !models.length ? i.noModel : i.online;
 
+  if(initializing)return <main className="startup-screen" aria-live="polite" aria-busy="true"><img src="/hassa-logo.svg" alt="HASSA AI"/><h1>{lang==='ar'?'هسّا بجهّز حاله...':'HASSA is starting...'}</h1><p>{lang==='ar'?'جاري الاتصال بالمحرك المحلي وتحميل النماذج.':'Connecting to your local AI engine and models.'}</p><div className="startup-track"><div/></div><small>{lang==='ar'?'محادثاتك محفوظة على جهازك.':'Your chats remain on your device.'}</small></main>;
   if(page==='onboarding')return <div dir={lang==='ar'?'rtl':'ltr'} className="hassa-onboarding-root"><Onboarding language={lang} step={setupStep} onStep={setSetupStep} engine={engine} models={models} model={setupModel} onModel={setSetupModel} progress={progress} downloading={Boolean(downloading)} onDownload={()=>void download(setupModel)} onCancel={()=>setModal({type:'cancel-download'})} onRetry={()=>{ if(!engine.connected){void refresh();setSetupStep('choose');} else void download(setupModel);}} onChat={newConversation} onModels={()=>setPage('models')} error={setupError}/>{modal?.type==='cancel-download'&&<Dialog title={lang==='ar'?'بدك توقف التنزيل؟':'Cancel download?'} onClose={()=>setModal(null)}><p className="dialog-description">{lang==='ar'?'إذا ألغيت، قد تحتاج تبدأ التنزيل من جديد. محادثاتك ما بتتأثر.':'You may need to download again. Your conversations remain intact.'}</p><div className="dialog-actions"><button className="btn secondary" onClick={()=>setModal(null)}>{i.cancel}</button><button className="btn danger" onClick={()=>{pullAbort.current?.abort();setModal(null);setSetupStep('choose');}}>{lang==='ar'?'إيقاف التنزيل':'Stop download'}</button></div></Dialog>}</div>;
 
   return <div className="app-shell" dir={lang === 'ar' ? 'rtl' : 'ltr'}>

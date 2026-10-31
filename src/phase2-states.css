@@ -112,3 +112,14 @@
 .dialog-description{font-size:15px;line-height:1.8}
 .dialog-actions{margin-top:25px;padding-top:24px}
 @media(max-height:780px){.welcome{padding-top:52px}.composer-zone{padding-bottom:18px}.messages{padding-top:30px}}
+
+/* Figma Screen 31 — startup state while checking local runtime */
+.startup-screen{height:100vh;min-height:600px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:17px;background:var(--hassa-surface-base);color:var(--hassa-text-primary);text-align:center}
+.startup-screen img{width:164px;height:53px;object-fit:contain;margin-bottom:22px}
+.startup-screen h1{font-size:28px;margin:0}
+.startup-screen p{font-size:15px;color:var(--hassa-text-secondary);margin:0}
+.startup-screen small{font-size:12px;color:var(--hassa-text-muted)}
+.startup-track{width:min(600px,60vw);height:9px;background:var(--hassa-surface-raised);overflow:hidden;border-radius:9px;margin:45px 0 23px}
+.startup-track>div{width:38%;height:100%;background:var(--hassa-brand-teal);border-radius:9px;animation:startup-motion 1.5s ease-in-out infinite alternate}
+@keyframes startup-motion{to{transform:translateX(160%);}}
+@media(prefers-reduced-motion:reduce){.startup-track>div{animation:none}}
