@@ -46,7 +46,7 @@ export function App() {
   const current = conversations.find(c => c.id === activeId) ?? null;
   const activeModel = models.find(m => m.name === prefs.defaultModel)?.name ?? models[0]?.name ?? '';
   const isReady = engine.connected && models.length > 0;
-  const suggestedInstalled = models.some(m => m.name === SUGGESTED_MODEL);
+  const suggestions = SUGGESTED_MODELS.filter(name => !models.some(m => m.name === name));
 
   useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; }, [lang]);
   useEffect(() => { if (!writePreferences(prefs)) setNotice(lang === 'ar' ? 'تعذر حفظ المحادثات على الجهاز.' : 'Could not save conversations locally.'); }, [prefs, lang]);
@@ -188,9 +188,8 @@ export function App() {
 
       {page === 'models' && <main className="content-page models-page"><div className="page-intro"><h2>{i.modelsTitle}</h2><p>{i.modelsDescription}</p></div><div className="section-header"><div><h2>{i.installed}</h2><p>{i.modelHint}</p></div><button className="btn secondary" onClick={() => void refresh()}><RefreshCw size={16}/>{i.retry}</button></div>
         {!engine.connected ? <div className="state-panel compact"><WifiOff size={24}/>{i.engineMissing}</div> : models.length ? <div className="model-list">{models.map(m => <div className="model-card" key={m.name}><div className="model-details"><div className="model-icon"><HardDrive size={20}/></div><div><div className="model-name">{m.name} {m.name === activeModel && <span className="model-active"><Check size={13}/>{i.active}</span>}</div><p>{(m.size / (1024 ** 3)).toFixed(1)} GB · {i.savedLocally}</p></div></div><div className="model-actions"><button className="btn secondary" onClick={() => setPrefs(old => ({ ...old, defaultModel: m.name }))} disabled={activeModel === m.name}>{i.choose}</button><button className="btn danger-outline" onClick={() => setModal({ type: 'delete-model', name: m.name })}><Trash2 size={16}/>{i.delete}</button></div></div>)}</div> : <div className="state-panel compact"><HardDrive size={25}/>{i.installModel}</div>}
-        {!suggestedInstalled && <><div className="section-header model-suggested"><div><h2>{i.suggested}</h2><p>{SUGGESTED_MODEL}</p></div></div>
-        <div className="model-card"><div className="model-details"><div className="model-icon"><HardDrive size={20}/></div><div><div className="model-name">Qwen3 4B</div><p>{i.modelHint}</p></div></div><button className="btn primary" disabled={!engine.connected || Boolean(downloading) || models.some(m => m.name === SUGGESTED_MODEL)} onClick={() => void download(SUGGESTED_MODEL)}><Download size={16}/>{downloading ? i.downloading : i.download}</button></div>
-        </>}
+        {suggestions.length>0 && <><div className="section-header model-suggested"><div><h2>{lang==='ar'?'نماذج متاحة للتنزيل':'Available models'}</h2><p>{i.modelHint}</p></div></div>
+        <div className="model-list suggested-list">{suggestions.map(name=><div className="model-card" key={name}><div className="model-details"><div className="model-icon"><HardDrive size={20}/></div><div><div className="model-name">{name}</div><p>{name.endsWith('1.7b')?(lang==='ar'?'للأجهزة الأخف':'Lighter model'):name.endsWith('8b')?(lang==='ar'?'يتطلب موارد أكبر':'Higher resource use'):(lang==='ar'?'خيار متوازن':'Balanced option')}</p></div></div><button className="btn primary" disabled={!engine.connected||Boolean(downloading)} onClick={()=>void download(name)}><Download size={16}/>{downloading===name?i.downloading:i.download}</button></div>)}</div></>}
         {downloading && <div className="download-progress" role="status" aria-live="polite"><div>{progress?.status || i.downloading} {typeof progress?.percent === 'number' ? `${progress.percent}%` : ''}</div><progress value={progress?.percent ?? undefined} max="100"/></div>}
       </main>}
 
