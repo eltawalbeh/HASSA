@@ -1,9 +1,9 @@
 import type { Language } from './types';
 export const dictionaries = {
   ar: {
-    app: 'هسّا', subtitle: 'الذكاء الاصطناعي على جهازك', newChat: 'محادثة جديدة', today: 'محادثاتك', history: 'المحادثات', models: 'النماذج', settings: 'الإعدادات', search: 'ابحث في محادثاتك...', noChats: 'لا توجد محادثات بعد',
+    app: 'هسّا', modelsTitle: 'نماذج الذكاء الاصطناعي', modelsDescription: 'نزّل النماذج، بدّل بينها، أو احذف اللي ما بتحتاجه. كل العمليات على جهازك.', subtitle: 'الذكاء الاصطناعي على جهازك', newChat: 'محادثة جديدة', today: 'اليوم', history: 'المحادثات', models: 'النماذج', settings: 'الإعدادات', search: 'ابحث في محادثاتك...', noChats: 'لا توجد محادثات بعد',
     header: 'محادثة جديدة', online: 'يعمل محلياً', offline: 'المحرك غير متصل', noModel: 'بدون نموذج', ready: 'جاهز للمحادثة',
-    greeting: 'شو بتحب نعمل هسّا؟', greetingSub: 'مساعدك المحلي. محادثاتك على جهازك.',
+    greeting: 'أهلين! شو حابب نعمل اليوم؟', greetingSub: 'اسأل، اكتب، أو احكي بالأسلوب اللي بريحك. كل شي هون محلي.',
     idea1: 'كتابة رسالة لعميل', idea2: 'أفكار لمشروع صغير', idea3: 'شرح مفهوم بالإنجليزي',
     prompt1: 'اكتب لي رسالة مهنية قصيرة لعميل', prompt2: 'اقترح أفكاراً لمشروع صغير في الأردن', prompt3: 'اشرح لي هذا المفهوم بالإنجليزي بطريقة بسيطة',
     input: 'احكي اللي ببالك...', disclaimer: 'قد يخطئ الذكاء الاصطناعي. تحقّق من المعلومات المهمة.', send: 'إرسال', stop: 'جارٍ توليد الإجابة…',
@@ -18,7 +18,7 @@ export const dictionaries = {
     loading: 'جارٍ الاتصال...', downloading: 'جارٍ التنزيل...', savedLocally: 'محفوظ على جهازك', clearSearch: 'مسح البحث', chooseModel: 'اختر نموذجاً أولاً', about: 'هسّا AI — إصدار تجريبي Desktop', noResults: 'لا توجد نتائج',
   },
   en: {
-    app: 'HASSA', subtitle: 'Local AI on your device', newChat: 'New conversation', today: 'Your conversations', history: 'History', models: 'Models', settings: 'Settings', search: 'Search conversations...', noChats: 'No conversations yet',
+    app: 'HASSA', modelsTitle: 'AI models', modelsDescription: 'Download, switch, or remove your local models. Everything stays on your device.', subtitle: 'Local AI on your device', newChat: 'New conversation', today: 'Your conversations', history: 'History', models: 'Models', settings: 'Settings', search: 'Search conversations...', noChats: 'No conversations yet',
     header: 'New conversation', online: 'Running locally', offline: 'Engine disconnected', noModel: 'No model installed', ready: 'Ready to chat',
     greeting: 'What would you like to do now?', greetingSub: 'Your local assistant. Your conversations stay on your device.',
     idea1: 'Write a client email', idea2: 'Small business ideas', idea3: 'Explain a concept',

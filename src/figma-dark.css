@@ -1,0 +1,204 @@
+/* HASSA Dark Design System — source of truth: approved Figma MVP, 1440 × 900.
+   Tokens mirror HASSA / Semantic Colors (Dark); Light Mode intentionally excluded. */
+:root {
+  color-scheme:dark;
+  --hassa-surface-base:#1c292e;
+  --hassa-surface-sidebar:#142126;
+  --hassa-surface-header:#1d2d31;
+  --hassa-surface-card:#26383a;
+  --hassa-surface-raised:#304448;
+  --hassa-surface-input:#304448;
+  --hassa-surface-selected:#274840;
+  --hassa-surface-user:#31564e;
+  --hassa-brand-teal:#286e65;
+  --hassa-brand-hover:#32867b;
+  --hassa-brand-pressed:#1d594f;
+  --hassa-brand-copper:#dd9253;
+  --hassa-text-primary:#f8f7f3;
+  --hassa-text-secondary:#b6c8c2;
+  --hassa-text-muted:#7e9994;
+  --hassa-text-supporting:#c3d2cb;
+  --hassa-stroke-subtle:#3c5556;
+  --hassa-stroke-standard:#445b5c;
+  --hassa-status-success:#84c9aa;
+  --hassa-focus-ring:#70b7ac;
+  --hassa-radius-sm:10px;
+  --hassa-radius-md:12px;
+  --hassa-radius-lg:16px;
+  --hassa-sidebar-width:312px;
+  --hassa-header-height:88px;
+  --hassa-content-max:950px;
+  --surface:var(--hassa-surface-base);
+  --sidebar:var(--hassa-surface-sidebar);
+  --panel:var(--hassa-surface-card);
+  --raised:var(--hassa-surface-raised);
+  --brand:var(--hassa-brand-teal);
+  --brand-hover:var(--hassa-brand-hover);
+  --mint:var(--hassa-status-success);
+  --text:var(--hassa-text-primary);
+  --muted:var(--hassa-text-secondary);
+  --border:var(--hassa-stroke-subtle);
+  --focus:var(--hassa-focus-ring);
+}
+body {min-width:900px;font-size:15px;background:var(--surface);}
+.app-shell {min-width:900px;direction:inherit;}
+.sidebar {
+  width:var(--hassa-sidebar-width);
+  min-width:var(--hassa-sidebar-width);
+  padding:26px 24px 26px;
+  gap:12px;
+  background:var(--hassa-surface-sidebar);
+  border-inline-end:1px solid rgba(255,255,255,.035);
+}
+.brand {height:66px;display:flex;align-items:flex-start;justify-content:flex-start;padding:0;margin-bottom:4px;}
+.brand-logo {display:block;width:164px;height:53px;max-width:100%;object-fit:contain;object-position:top right;}
+.app-shell[dir="ltr"] .brand-logo {object-position:top left;}
+.new-chat {
+  min-height:56px;border-radius:12px;
+  flex-direction:row-reverse;
+  justify-content:space-between;
+  padding-inline:17px;
+  font-size:15px;line-height:1.4;
+  background:var(--hassa-brand-teal);
+  transition:background-color .13s ease;
+}
+.new-chat:hover:not(:disabled) {background:var(--hassa-brand-hover);}
+.new-chat:active:not(:disabled) {background:var(--hassa-brand-pressed);}
+.sidebar-heading {padding:20px 0 2px;font-size:12px;color:var(--hassa-text-muted);}
+.sidebar-search {background:var(--hassa-surface-card);border:1px solid transparent;border-radius:12px;min-height:43px;}
+.sidebar-search:focus-within {border-color:var(--hassa-focus-ring);}
+.sidebar-search input {height:42px;font-size:13px;}
+.conversation-list {gap:7px;}
+.conversation-entry {min-height:49px;padding-inline:7px;border-radius:12px;}
+.conversation-entry.active,.nav-action.selected {background:var(--hassa-surface-card);}
+.conversation-entry:hover,.nav-action:hover {background:#304a47;}
+.conversation-link {font-size:13px;}
+.item-menu button {min-height:36px;}
+.sidebar-bottom {gap:9px;padding-top:16px;border-top:1px solid var(--hassa-stroke-subtle);}
+.nav-action {min-height:48px;border:1px solid transparent;border-radius:12px;padding:9px 12px;font-size:14px;}
+.nav-action.selected {border-color:var(--hassa-stroke-standard);color:var(--hassa-text-primary);}
+.workspace {background:var(--hassa-surface-base);}
+.topbar {
+  min-height:var(--hassa-header-height);
+  height:var(--hassa-header-height);
+  flex:0 0 var(--hassa-header-height);
+  padding-inline:32px;
+  border-bottom:1px solid rgba(255,255,255,.025);
+  background:var(--hassa-surface-header);
+  gap:24px;
+}
+.page-heading {flex:1;min-width:0;gap:0;}
+.page-heading > svg {display:none;}
+.page-heading h1 {font-size:16px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:100%;font-weight:600;}
+.topbar-tools {flex-shrink:0;gap:12px;}
+.model-select-wrap {background:var(--hassa-surface-raised);border:0;border-radius:11px;min-height:36px;}
+.model-select-wrap select {height:36px;min-width:108px;font-size:12px;}
+.status-pill {background:#29403d;color:var(--hassa-text-supporting);font-size:12px;border-radius:11px;min-height:36px;padding:8px 13px;}
+.status-pill.warning {background:#453c31;}
+.status-dot {background:var(--hassa-status-success);}
+.icon-button {width:42px;height:42px;}
+.icon-button:hover {background:#34484c;}
+.chat-page {min-height:0;}
+.welcome {
+  flex:1 1 auto;justify-content:flex-start;gap:0;
+  padding:100px 44px 32px;
+  min-height:0;
+}
+.welcome-logo {width:164px;height:53px;object-fit:contain;display:block;}
+.welcome h2 {font-size:34px;line-height:1.45;margin:38px 0 0;font-weight:650;color:var(--hassa-text-primary);}
+.welcome p {font-size:17px;line-height:1.55;margin-top:4px;color:var(--hassa-text-secondary);}
+.suggestions {
+  margin-top:51px;
+  width:min(950px,100%);
+  max-width:950px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:25px;flex-wrap:nowrap;
+}
+.suggestion {
+  min-width:0;width:100%;min-height:74px;padding:18px 19px;
+  border:1px solid transparent;border-radius:13px;
+  background:var(--hassa-surface-card);
+  font-size:15px;font-weight:500;gap:12px;
+  transition:background-color .13s ease,border-color .13s ease;
+}
+.suggestion span {font-size:20px;color:var(--hassa-status-success);}
+.suggestion:hover {background:#304a47;border-color:#445b5c;}
+.suggestion:active {background:#1b3935;}
+.messages {
+  padding:57px 56px 28px;
+  gap:28px;align-items:stretch;
+  scroll-behavior:smooth;
+}
+.message {width:min(777px,100%);max-width:777px;font-size:15px;line-height:1.75;margin:0 auto;}
+.message.user {max-width:506px;min-height:68px;background:var(--hassa-surface-user);border-radius:16px;padding:17px 22px;margin-inline-start:auto;margin-inline-end:max(0px,calc((100% - 940px)/2));}
+.message.assistant {padding:19px 23px;border-radius:16px;background:var(--hassa-surface-card);max-width:777px;}
+.message-role {font-size:13px;margin-bottom:12px;color:var(--hassa-brand-copper);}
+.message.user .message-role {color:var(--hassa-text-secondary);}
+.message-markdown {line-height:1.8;}
+.composer-zone {
+  flex:0 0 auto;
+  width:100%;max-width:1006px;
+  padding:0 28px 31px;
+  margin:auto auto 0;
+}
+.composer {
+  min-height:84px;padding:13px 14px;
+  background:var(--hassa-surface-card);
+  border:1px solid var(--hassa-stroke-standard);
+  border-radius:15px;gap:12px;
+}
+.composer:focus-within {border-color:var(--hassa-focus-ring);box-shadow:0 0 0 1px var(--hassa-focus-ring);}
+.composer textarea {min-height:49px;line-height:1.65;font-size:15px;}
+.send-button {width:44px;height:44px;border-radius:11px;background:var(--hassa-brand-teal);}
+.send-button:active:not(:disabled) {background:var(--hassa-brand-pressed);}
+.composer-footnote {margin-top:12px;font-size:11px;color:var(--hassa-text-muted);}
+.thinking {max-width:777px;width:100%;margin-inline:auto;}
+.content-page {padding:45px 64px 50px;}
+.content-page > .section-header,
+.content-page > .settings-list,
+.content-page > .model-list,
+.content-page > .model-card,
+.content-page > .model-suggested,
+.content-page > .download-progress,
+.content-page > .app-version,
+.content-page > .page-intro,
+.content-page > .state-panel {width:100%;max-width:824px;margin-inline:auto;}
+.page-intro {text-align:start;margin-top:0;margin-bottom:39px!important;}
+.page-intro h2 {font-size:35px;line-height:1.4;margin:0 0 10px;font-weight:650;}
+.page-intro p {font-size:16px;color:var(--hassa-text-secondary);line-height:1.6;margin:0;}
+.content-page > .section-header {margin-top:24px;margin-bottom:13px;}
+.content-page .section-header h2 {font-size:21px;line-height:1.45;}
+.content-page .section-header p {font-size:13px;line-height:1.6;}
+.model-list {gap:12px;}
+.model-card {background:var(--hassa-surface-card);border:1px solid transparent;border-radius:14px;min-height:115px;padding:21px 24px;}
+.model-card:hover {border-color:var(--hassa-stroke-subtle);}
+.model-icon {background:var(--hassa-surface-raised);color:var(--hassa-status-success);}
+.model-name {font-size:17px;}
+.model-card p {font-size:13px;}
+.model-actions .btn {min-height:44px;}
+.settings-page .section-header {margin-bottom:48px;}
+.settings-list {gap:15px;}
+.setting-row {min-height:80px;border-radius:14px;border:1px solid transparent;background:var(--hassa-surface-card);padding:18px 22px;}
+.setting-row strong {font-size:15px;}
+.setting-row p {font-size:13px;color:var(--hassa-text-secondary);line-height:1.6;}
+.setting-value {color:var(--hassa-status-success);font-size:13px;}
+.btn {min-height:44px;border-radius:12px;}
+.btn.primary {background:var(--hassa-brand-teal);}
+.btn.primary:active:not(:disabled) {background:var(--hassa-brand-pressed);}
+.btn.secondary {background:var(--hassa-surface-raised);border-color:var(--hassa-stroke-standard);}
+.btn.secondary:hover {background:#40595c;}
+.dialog {background:var(--hassa-surface-card);border:1px solid var(--hassa-stroke-standard);border-radius:22px;}
+.overlay {background:rgba(10,20,23,.8);}
+:where(button,input,select,textarea):focus-visible {outline:2px solid var(--hassa-focus-ring);outline-offset:3px;}
+@media(max-width:1100px) {
+  .sidebar {width:272px;min-width:272px;padding-inline:18px;}
+  .content-page {padding-inline:35px;}
+  .welcome {padding-inline:24px;padding-top:80px;}
+  .suggestions {gap:12px;}
+  .suggestion {font-size:13px;padding:13px;}
+  .message.user {margin-inline-end:0;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .messages {scroll-behavior:auto;}
+  .suggestion,.new-chat {transition:none;}
+}

@@ -110,7 +110,7 @@ export function App() {
 
   return <div className="app-shell" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
     <aside className="sidebar" aria-label={i.history}>
-      <div className="brand"><div className="brand-mark" aria-hidden="true">ه</div><div><div className="brand-word">{i.app}</div><div className="brand-sub">HASSA AI</div></div></div>
+      <div className="brand"><img className="brand-logo" src="/hassa-logo.svg" alt={lang === "ar" ? "هسّا — HASSA AI" : "HASSA AI"} /></div>
       <button className="new-chat" onClick={newConversation}><Plus size={18}/><span>{i.newChat}</span></button>
       <div className="sidebar-heading">{i.today}</div>
       <div className="sidebar-search"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder={i.search} aria-label={i.search}/>{query && <button className="clear-search" onClick={() => setQuery('')} aria-label={i.clearSearch}><X size={15}/></button>}</div>
@@ -142,7 +142,7 @@ export function App() {
         {!engine.connected && !connecting && <section className="state-panel" role="status"><WifiOff size={29}/><h2>{i.offline}</h2><p>{i.engineMissing} {i.engineHow}</p><button className="btn secondary" onClick={() => void refresh()}><RefreshCw size={17}/>{i.retry}</button></section>}
         {engine.connected && !models.length && !connecting && <section className="state-panel" role="status"><HardDrive size={29}/><h2>{i.noModel}</h2><p>{i.installModel}</p><button className="btn primary" onClick={() => setPage('models')}><Download size={17}/>{i.download}</button></section>}
         {isReady && !current?.messages.length && <section className="welcome" aria-label={i.greeting}>
-          <div className="welcome-symbol" aria-hidden="true">✦</div><h2>{i.greeting}</h2><p>{i.greetingSub}</p>
+          <img className="welcome-logo" src="/hassa-logo.svg" alt="" aria-hidden="true"/><h2>{i.greeting}</h2><p>{i.greetingSub}</p>
           <div className="suggestions">{([1, 2, 3] as const).map(n => <button className="suggestion" key={n} onClick={() => void send(i[`prompt${n}`])}>{i[`idea${n}`]}<span>↗</span></button>)}</div>
         </section>}
         {isReady && current?.messages.length ? <section className="messages" aria-label={i.history}>
@@ -155,7 +155,7 @@ export function App() {
         </div>
       </main> : null}
 
-      {page === 'models' && <main className="content-page"><div className="section-header"><div><h2>{i.installed}</h2><p>{i.modelHint}</p></div><button className="btn secondary" onClick={() => void refresh()}><RefreshCw size={16}/>{i.retry}</button></div>
+      {page === 'models' && <main className="content-page models-page"><div className="page-intro"><h2>{i.modelsTitle}</h2><p>{i.modelsDescription}</p></div><div className="section-header"><div><h2>{i.installed}</h2><p>{i.modelHint}</p></div><button className="btn secondary" onClick={() => void refresh()}><RefreshCw size={16}/>{i.retry}</button></div>
         {!engine.connected ? <div className="state-panel compact"><WifiOff size={24}/>{i.engineMissing}</div> : models.length ? <div className="model-list">{models.map(m => <div className="model-card" key={m.name}><div className="model-details"><div className="model-icon"><HardDrive size={20}/></div><div><div className="model-name">{m.name} {m.name === activeModel && <span className="model-active"><Check size={13}/>{i.active}</span>}</div><p>{(m.size / (1024 ** 3)).toFixed(1)} GB · {i.savedLocally}</p></div></div><div className="model-actions"><button className="btn secondary" onClick={() => setPrefs(old => ({ ...old, defaultModel: m.name }))} disabled={activeModel === m.name}>{i.choose}</button><button className="btn danger-outline" onClick={() => setModal({ type: 'delete-model', name: m.name })}><Trash2 size={16}/>{i.delete}</button></div></div>)}</div> : <div className="state-panel compact"><HardDrive size={25}/>{i.installModel}</div>}
         {!suggestedInstalled && <><div className="section-header model-suggested"><div><h2>{i.suggested}</h2><p>{SUGGESTED_MODEL}</p></div></div>
         <div className="model-card"><div className="model-details"><div className="model-icon"><HardDrive size={20}/></div><div><div className="model-name">Qwen3 4B</div><p>{i.modelHint}</p></div></div><button className="btn primary" disabled={!engine.connected || Boolean(downloading) || models.some(m => m.name === SUGGESTED_MODEL)} onClick={() => void download(SUGGESTED_MODEL)}><Download size={16}/>{downloading ? i.downloading : i.download}</button></div>
@@ -163,7 +163,7 @@ export function App() {
         {downloading && <div className="download-progress" role="status" aria-live="polite"><div>{progress?.status || i.downloading} {typeof progress?.percent === 'number' ? `${progress.percent}%` : ''}</div><progress value={progress?.percent ?? undefined} max="100"/></div>}
       </main>}
 
-      {page === 'settings' && <main className="content-page"><div className="section-header"><div><h2>{i.settings}</h2><p>{i.subtitle}</p></div></div>
+      {page === 'settings' && <main className="content-page settings-page"><div className="section-header"><div><h2>{i.settings}</h2><p>{i.subtitle}</p></div></div>
         <div className="settings-list"><div className="setting-row"><div><strong><ShieldCheck size={18}/>{i.hassaIdentity}</strong><p>{i.hassaIdentityDesc}</p></div><span className="setting-value">HASSA AI</span></div><div className="setting-row"><div><strong><Languages size={18}/>{i.language}</strong><p>العربية / English</p></div><select aria-label={i.language} value={lang} onChange={e => setPrefs(old => ({ ...old, language: e.target.value === 'en' ? 'en' : 'ar' }))}><option value="ar">العربية</option><option value="en">English</option></select></div>
           <div className="setting-row"><div><strong><ShieldCheck size={18}/>{i.privacy}</strong><p>{i.privacyDesc}</p></div><span className="setting-value">{i.savedLocally}</span></div>
           <div className="setting-row"><div><strong><Settings size={18}/>{i.appearance}</strong><p>{i.darkOnly}</p></div><span className="setting-value">Dark</span></div>
