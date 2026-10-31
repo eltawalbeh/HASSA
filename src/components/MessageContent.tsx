@@ -37,7 +37,7 @@ export function MessageContent({ content }: { content: string }) {
     const heading = line.match(/^(#{1,3})\s+(.+)$/);
     if (heading) {
       const children = inline(heading[2]);
-      blocks.push(heading[1].length === 1 ? <h2 key={blocks.length}>{children}</h2> : <h3 key={blocks.length}>{children}</h3>);
+      blocks.push(heading[1].length === 1 ? <h2 dir="auto" key={blocks.length}>{children}</h2> : <h3 dir="auto" key={blocks.length}>{children}</h3>);
       i++; continue;
     }
     const bullet = line.match(/^\s*([-*]|\d+\.)\s+(.+)$/);
@@ -47,7 +47,7 @@ export function MessageContent({ content }: { content: string }) {
       while (i < lines.length) {
         const match = lines[i].match(/^\s*([-*]|\d+\.)\s+(.+)$/);
         if (!match || /\d/.test(match[1]) !== ordered) break;
-        items.push(<li key={i}>{inline(match[2])}</li>);
+        items.push(<li dir="auto" key={i}>{inline(match[2])}</li>);
         i++;
       }
       blocks.push(ordered ? <ol key={blocks.length}>{items}</ol> : <ul key={blocks.length}>{items}</ul>);
@@ -56,7 +56,7 @@ export function MessageContent({ content }: { content: string }) {
     const paragraph: string[] = [line];
     i++;
     while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|```|\s*([-*]|\d+\.)\s+)/.test(lines[i])) paragraph.push(lines[i++]);
-    blocks.push(<p key={blocks.length}>{paragraph.map((part, index) => <span key={index}>{index > 0 ? <br/> : null}{inline(part)}</span>)}</p>);
+    blocks.push(<p dir="auto" key={blocks.length}>{paragraph.map((part, index) => <span key={index}>{index > 0 ? <br/> : null}{inline(part)}</span>)}</p>);
   }
   return <div className="message-markdown" dir="auto">{blocks}</div>;
 }

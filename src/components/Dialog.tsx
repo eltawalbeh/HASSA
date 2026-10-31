@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
-export function Dialog({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+import type { Language } from '../types';
+export function Dialog({ title, onClose, children, language = 'ar' }: { title: string; onClose: () => void; children: ReactNode; language?: Language }) {
   const ref = useRef<HTMLDivElement>(null);
   const closeRef=useRef(onClose);
   useEffect(()=>{closeRef.current=onClose;},[onClose]);
@@ -23,7 +24,7 @@ export function Dialog({ title, onClose, children }: { title: string; onClose: (
   }, []);
   return <div className="overlay" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
     <div className="dialog" ref={ref} role="dialog" aria-modal="true" aria-labelledby="hassa-dialog-title">
-      <div className="dialog-heading"><h2 id="hassa-dialog-title">{title}</h2><button type="button" className="icon-button" onClick={onClose} aria-label="Close dialog"><X size={18}/></button></div>
+      <div className="dialog-heading"><h2 id="hassa-dialog-title">{title}</h2><button type="button" className="icon-button" onClick={onClose} aria-label={language === 'ar' ? 'إغلاق النافذة' : 'Close dialog'}><X size={18}/></button></div>
       {children}
     </div>
   </div>;

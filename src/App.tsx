@@ -34,6 +34,7 @@ export function App() {
   const [initializing, setInitializing] = useState(true);
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState<string|null>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [draft, setDraft] = useState('');
   const [pending, setPending] = useState(false);
   const [downloading, setDownloading] = useState<string | null>(null);
@@ -55,7 +56,17 @@ export function App() {
   useEffect(() => { if (!writePreferences(prefs)) setNotice(lang === 'ar' ? 'تعذر حفظ المحادثات على الجهاز.' : 'Could not save conversations locally.'); }, [prefs, lang]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [current?.messages.length, pending]);
   useEffect(() => { if (!connecting && engine.connected && !models.length && !conversations.length && !firstSetup.current) { firstSetup.current=true; setPage('onboarding'); } }, [connecting, engine.connected, models.length, conversations.length]);
-  useEffect(()=>{if(!menuOpen)return;const handler=(e:KeyboardEvent)=>{if(e.key==='Escape')setMenuOpen(null);};const outside=(e:MouseEvent)=>{if(!(e.target as Element)?.closest?.('.item-menu'))setMenuOpen(null);};document.addEventListener('keydown',handler);document.addEventListener('mousedown',outside);return()=>{document.removeEventListener('keydown',handler);document.removeEventListener('mousedown',outside);};},[menuOpen]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const frame = requestAnimationFrame(() => menuTriggerRef.current?.closest('.item-menu')?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus());
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); setMenuOpen(null); menuTriggerRef.current?.focus(); }
+    };
+    const outside = (e: MouseEvent) => { if (!(e.target as Element)?.closest?.('.item-menu')) setMenuOpen(null); };
+    document.addEventListener('keydown', handler);
+    document.addEventListener('mousedown', outside);
+    return () => { cancelAnimationFrame(frame); document.removeEventListener('keydown', handler); document.removeEventListener('mousedown', outside); };
+  }, [menuOpen]);
   useEffect(() => { const keys=(e:KeyboardEvent)=>{ if(e.ctrlKey && !e.shiftKey && e.key.toLowerCase()==='n'){e.preventDefault();newConversation();} if(e.ctrlKey && !e.shiftKey && e.key.toLowerCase()==='k'){e.preventDefault();setPage('history');requestAnimationFrame(()=>document.querySelector<HTMLInputElement>('.history-search input')?.focus());} };document.addEventListener('keydown',keys);return()=>document.removeEventListener('keydown',keys); }, []);
 
   const refresh = useCallback(async () => {
@@ -142,7 +153,7 @@ export function App() {
   const statusText = connecting ? i.loading : !engine.connected ? i.offline : !models.length ? i.noModel : i.online;
 
   if(initializing)return <main className="startup-screen" aria-live="polite" aria-busy="true"><img src="/hassa-logo.svg" alt="HASSA AI"/><h1>{lang==='ar'?'هسّا بجهّز حاله...':'HASSA is starting...'}</h1><p>{lang==='ar'?'جاري الاتصال بالمحرك المحلي وتحميل النماذج.':'Connecting to your local AI engine and models.'}</p><div className="startup-track"><div/></div><small>{lang==='ar'?'محادثاتك محفوظة على جهازك.':'Your chats remain on your device.'}</small></main>;
-  if(page==='onboarding')return <div dir={lang==='ar'?'rtl':'ltr'} className="hassa-onboarding-root"><Onboarding language={lang} step={setupStep} onStep={setSetupStep} engine={engine} models={models} model={setupModel} onModel={setSetupModel} progress={progress} downloading={Boolean(downloading)} onDownload={()=>void download(setupModel)} onCancel={()=>setModal({type:'cancel-download'})} onRetry={()=>{ if(!engine.connected){void refresh();setSetupStep('choose');} else void download(setupModel);}} onChat={newConversation} onModels={()=>setPage('models')} error={setupError}/>{modal?.type==='cancel-download'&&<Dialog title={lang==='ar'?'بدك توقف التنزيل؟':'Cancel download?'} onClose={()=>setModal(null)}><p className="dialog-description">{lang==='ar'?'إذا ألغيت، قد تحتاج تبدأ التنزيل من جديد. محادثاتك ما بتتأثر.':'You may need to download again. Your conversations remain intact.'}</p><div className="dialog-actions"><button className="btn secondary" onClick={()=>setModal(null)}>{i.cancel}</button><button className="btn danger" onClick={()=>{pullAbort.current?.abort();setModal(null);setSetupStep('choose');}}>{lang==='ar'?'إيقاف التنزيل':'Stop download'}</button></div></Dialog>}</div>;
+  if(page==='onboarding')return <div dir={lang==='ar'?'rtl':'ltr'} className="hassa-onboarding-root"><Onboarding language={lang} step={setupStep} onStep={setSetupStep} engine={engine} models={models} model={setupModel} onModel={setSetupModel} progress={progress} downloading={Boolean(downloading)} onDownload={()=>void download(setupModel)} onCancel={()=>setModal({type:'cancel-download'})} onRetry={()=>{ if(!engine.connected){void refresh();setSetupStep('choose');} else void download(setupModel);}} onChat={newConversation} onModels={()=>setPage('models')} error={setupError}/>{modal?.type==='cancel-download'&&<Dialog language={lang} title={lang==='ar'?'بدك توقف التنزيل؟':'Cancel download?'} onClose={()=>setModal(null)}><p className="dialog-description">{lang==='ar'?'إذا ألغيت، قد تحتاج تبدأ التنزيل من جديد. محادثاتك ما بتتأثر.':'You may need to download again. Your conversations remain intact.'}</p><div className="dialog-actions"><button className="btn secondary" onClick={()=>setModal(null)}>{i.cancel}</button><button className="btn danger" onClick={()=>{pullAbort.current?.abort();setModal(null);setSetupStep('choose');}}>{lang==='ar'?'إيقاف التنزيل':'Stop download'}</button></div></Dialog>}</div>;
 
   return <div className="app-shell" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
     <aside className="sidebar" aria-label={i.history}>
@@ -153,7 +164,18 @@ export function App() {
       <nav className="conversation-list" aria-label={i.history}>
         {filtered.length ? filtered.map(c => <div className={'conversation-entry ' + (activeId === c.id && page === 'chat' ? 'active' : '')} key={c.id}>
           <button className="conversation-link" onClick={() => openChat(c.id)} aria-current={activeId === c.id && page === 'chat' ? 'page' : undefined}><MessageSquare size={15}/><span title={c.title}>{c.title}</span></button>
-          <div className="item-menu"><button aria-label={lang==='ar'?'إجراءات المحادثة':'Conversation actions'} title={lang==='ar'?'إجراءات المحادثة':'Conversation actions'} aria-haspopup="menu" aria-expanded={menuOpen===c.id} onClick={() => setMenuOpen(old=>old===c.id?null:c.id)}><MoreHorizontal size={18}/></button>{menuOpen===c.id && <div className="conversation-menu" role="menu"><button role="menuitem" onClick={()=>openRename(c)}><Settings size={15}/>{i.renameConversation}</button><button role="menuitem" onClick={()=>{setMenuOpen(null);setModal({type:'delete-chat',id:c.id});}}><Trash2 size={15}/>{i.removeConversation}</button></div>}</div>
+          <div className="item-menu"><button
+              ref={el=>{if(menuOpen===c.id)menuTriggerRef.current=el;}}
+              aria-label={lang==='ar'?'إجراءات المحادثة':'Conversation actions'}
+              title={lang==='ar'?'إجراءات المحادثة':'Conversation actions'}
+              aria-haspopup="menu" aria-expanded={menuOpen===c.id}
+              onClick={() => setMenuOpen(old=>old===c.id?null:c.id)}
+              onKeyDown={e=>{if(e.key==='ArrowDown'&&menuOpen!==c.id){e.preventDefault();setMenuOpen(c.id);}}}
+            ><MoreHorizontal size={18}/></button>{menuOpen===c.id && <div className="conversation-menu" role="menu" aria-label={lang==='ar'?'إجراءات المحادثة':'Conversation actions'}
+              onKeyDown={e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();const items=Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));const index=items.indexOf(document.activeElement as HTMLButtonElement);items[(index+(e.key==='ArrowDown'?1:-1)+items.length)%items.length]?.focus();}if(e.key==='Tab')setMenuOpen(null);}}>
+              <button role="menuitem" onClick={()=>openRename(c)}><Settings size={15}/>{i.renameConversation}</button>
+              <button role="menuitem" onClick={()=>{setMenuOpen(null);setModal({type:'delete-chat',id:c.id});}}><Trash2 size={15}/>{i.removeConversation}</button>
+            </div>}</div>
         </div>) : <p className="empty-history">{query ? i.noResults : i.noChats}</p>}
       </nav>
       <div className="sidebar-bottom">
@@ -203,7 +225,7 @@ export function App() {
       {page==='settings' && <SettingsPanel prefs={prefs} models={models} engineVersion={engine.version} section={settingsSection} onSection={setSettingsSection} onLanguage={language=>setPrefs(old=>({...old,language}))} onPrefs={patch=>setPrefs(old=>({...old,...patch}))} onKeyboard={()=>setModal({type:'shortcuts'})} onClear={()=>setModal({type:'clear-history'})} onExport={exportConversations}/>}
     </div>
 
-    {modal && <Dialog title={modal.type==='delete-model'?i.confirmDelete:modal.type==='rename-chat'?i.renameConversation:modal.type==='delete-chat'?i.removeConversation:modal.type==='clear-history'?(lang==='ar'?'حذف جميع المحادثات نهائياً؟':'Delete all conversations?'):modal.type==='shortcuts'?(lang==='ar'?'اختصارات لوحة المفاتيح':'Keyboard shortcuts'):modal.type==='export-success'?(lang==='ar'?'تم تجهيز نسخة بياناتك':'Your export is ready'):'Cancel download'} onClose={()=>setModal(null)}>
+    {modal && <Dialog language={lang} title={modal.type==='delete-model'?i.confirmDelete:modal.type==='rename-chat'?i.renameConversation:modal.type==='delete-chat'?i.removeConversation:modal.type==='clear-history'?(lang==='ar'?'حذف جميع المحادثات نهائياً؟':'Delete all conversations?'):modal.type==='shortcuts'?(lang==='ar'?'اختصارات لوحة المفاتيح':'Keyboard shortcuts'):modal.type==='export-success'?(lang==='ar'?'تم تجهيز نسخة بياناتك':'Your export is ready'):'Cancel download'} onClose={()=>setModal(null)}>
       {modal.type==='rename-chat'?<><label className="modal-field"><span>{i.rename}</span><input autoFocus value={renameDraft} onChange={e=>setRenameDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')saveRename();}}/></label><div className="dialog-actions"><button className="btn secondary" onClick={()=>setModal(null)}>{i.cancel}</button><button className="btn primary" onClick={saveRename} disabled={!renameDraft.trim()}>{i.save}</button></div></>:
       modal.type==='shortcuts'?<><ShortcutsPanel language={lang}/><div className="dialog-actions"><button className="btn secondary" onClick={()=>setModal(null)}>{i.close}</button></div></>:
       modal.type==='export-success'?<><p className="dialog-description">{lang==='ar'?'تم تجهيز ملف التنزيل في المتصفح. تأكّد من مكان حفظه.':'The download was prepared in your browser. Check where it was saved.'}</p><div className="dialog-actions"><button className="btn primary" onClick={()=>setModal(null)}>{i.close}</button></div></>:

@@ -14,11 +14,11 @@ export function HistoryPanel({language,conversations,filter,onFilter,open,rename
   language: Language; conversations: Conversation[]; filter: string; onFilter: (v:string)=>void; open:(id:string)=>void; rename:(c:Conversation)=>void; remove:(c:Conversation)=>void;
 }) {
   const en=language==='en';
-  const matching=conversations.filter(c=>(c.title+' '+c.messages.map(m=>m.content).join(' ')).toLocaleLowerCase().includes(filter.toLocaleLowerCase()));
+  const matching=conversations.filter(c=>(c.title+' '+c.messages.map(m=>m.content).join(' ')).toLocaleLowerCase().includes(filter.toLocaleLowerCase())).sort((a,b)=>b.updatedAt-a.updatedAt);
   return <main className="content-page history-page">
     <PageHeading heading={title(en,'كل محادثاتك بمكان واحد','All your conversations in one place')} sub={title(en,'ابحث محلياً في العناوين، وارجع لأي محادثة محفوظة.','Search titles and messages stored on your device.')} />
     <label className="history-search"><Search size={19}/><span className="sr-only">{title(en,'بحث في المحادثات','Search conversations')}</span><input value={filter} onChange={e=>onFilter(e.target.value)} placeholder={title(en,'ابحث عن عنوان أو كلمة...','Search by title or keyword...')} /></label>
-    <div className="history-caption">{title(en,'اليوم','Conversations')} <span>{matching.length}</span></div>
+    <div className="history-caption">{title(en,'كل المحادثات','Conversations')} <span>{matching.length}</span></div>
     {matching.length ? <div className="history-list">{matching.map(c=><div className="history-card" key={c.id}>
       <button className="history-open" onClick={()=>open(c.id)}><span className="history-title">{c.title}</span><span className="history-preview">{c.messages.filter(m=>m.role==='assistant').at(-1)?.content.slice(0,105) ?? c.messages.at(-1)?.content.slice(0,105) ?? ''}</span><span className="history-date">{new Date(c.updatedAt).toLocaleString(en?'en-GB':'ar-JO',{dateStyle:'medium',timeStyle:'short'})}</span></button>
       <div className="history-actions"><button className="icon-button" aria-label={title(en,'إعادة تسمية المحادثة','Rename conversation')} onClick={()=>rename(c)}><Settings2 size={18}/></button><button className="icon-button" aria-label={title(en,'حذف المحادثة','Delete conversation')} onClick={()=>remove(c)}><Trash2 size={18}/></button></div>
