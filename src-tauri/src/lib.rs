@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
+use std::sync::atomic::{AtomicBool, Ordering};
+#[derive(Default)]
+struct DownloadControl { cancelled: AtomicBool }
+
 
 const BASE: &str = "http://127.0.0.1:11434";
 fn client() -> Result<reqwest::Client, String> {
@@ -39,10 +43,10 @@ async fn list_models() -> Result<Vec<ModelInfo>, String> {
     Ok(res.json::<ModelsResponse>().await.map_err(|e| e.to_string())?.models.unwrap_or_default())
 }
 #[tauri::command]
-async fn chat_with_model(model: String, messages: Vec<WireMessage>) -> Result<String, String> {
+async fn chat_with_model(model: String, messages: Vec<WireMessage>, temperature: Option<f32>) -> Result<String, String> {
     if model.trim().is_empty() { return Err("Select a model".into()); }
     let response = client()?.post(format!("{BASE}/api/chat"))
-      .json(&serde_json::json!({"model":model,"messages":messages,"stream":false}))
+      .json(&serde_json::json!({"model":model,"messages":messages,"stream":false,"options":{"temperature":temperature.unwrap_or(0.7).clamp(0.0,2.0)}}))
       .send().await.map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?;
     let data: ChatResponse = response.json().await.map_err(|e| e.to_string())?;
     data.message.map(|m| m.content).ok_or_else(|| "No assistant reply".into())
@@ -56,13 +60,17 @@ async fn delete_model(name: String) -> Result<(), String> {
     Ok(())
 }
 #[tauri::command]
+fn cancel_pull(app: AppHandle) { app.state::<DownloadControl>().cancelled.store(true, Ordering::SeqCst); }
+#[tauri::command]
 async fn pull_model(app: AppHandle, name: String) -> Result<(), String> {
+    app.state::<DownloadControl>().cancelled.store(false, Ordering::SeqCst);
     if name.trim().is_empty() { return Err("Missing model name".into()); }
     let mut res = client()?.post(format!("{BASE}/api/pull"))
       .json(&serde_json::json!({"model":name,"stream":true}))
       .send().await.map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?;
     let mut buffer: Vec<u8> = Vec::new();
     while let Some(chunk) = res.chunk().await.map_err(|e| e.to_string())? {
+        if app.state::<DownloadControl>().cancelled.load(Ordering::SeqCst) { return Err("Download cancelled".into()); }
         buffer.extend_from_slice(&chunk);
         while let Some(index) = buffer.iter().position(|b| *b == b'\n') {
             let line = buffer.drain(..=index).collect::<Vec<u8>>();
@@ -91,7 +99,8 @@ fn emit_progress_line(app: &AppHandle, model: &str, line: &[u8]) -> Result<(), S
 
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![check_engine, list_models, chat_with_model, delete_model, pull_model])
+        .manage(DownloadControl::default())
+        .invoke_handler(tauri::generate_handler![check_engine, list_models, chat_with_model, delete_model, pull_model, cancel_pull])
         .run(tauri::generate_context!())
         .expect("error running HASSA desktop application");
 }
