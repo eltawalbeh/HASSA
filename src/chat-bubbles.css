@@ -1,0 +1,104 @@
+/* HASSA Chat Bubble layout fix — final override after all Phase 2 styles.
+   Content determines height; never clip Arabic, English or Markdown. */
+.messages {
+  min-width: 0;
+  align-items: stretch;
+}
+
+.messages > .message-bubble {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  box-sizing: border-box;
+  height: auto;
+  max-height: none;
+  min-width: 0;
+  overflow: visible;
+}
+
+.messages > .message-bubble.user {
+  width: fit-content;
+  max-width: min(506px, 100%);
+  min-height: 68px;
+  padding: 17px 22px;
+  margin-inline-start: auto;
+  margin-inline-end: 0;
+  border-radius: 16px;
+  background: var(--hassa-surface-user);
+}
+
+.messages > .message-bubble.user[dir="rtl"] {
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}
+
+.messages > .message-bubble.assistant {
+  width: min(777px, 100%);
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 19px 23px;
+  border-radius: 16px;
+  background: var(--hassa-surface-card);
+}
+
+.message-bubble > .message-role {
+  flex: 0 0 auto;
+  display: block;
+  margin: 0;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: start;
+}
+
+.message-bubble > .message-markdown {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  line-height: 1.85;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow: visible;
+}
+
+/* Markdown may nest spans, paragraphs, lists or long unbroken model output. */
+.message-bubble .message-markdown :is(p, span, strong, em, a, li, h2, h3, ul, ol) {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.message-bubble .message-markdown p {
+  margin: 0 0 12px;
+  white-space: normal;
+  line-height: inherit;
+}
+
+.message-bubble .message-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.message-bubble .message-markdown pre {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: visible;
+  white-space: pre;
+}
+
+/* Keep full content visible for RTL, LTR and narrow desktop windows. */
+@media (max-width: 1100px) {
+  .messages > .message-bubble.user { max-width: min(506px, 100%); }
+  .messages > .message-bubble.assistant { width: min(777px, 100%); }
+}
