@@ -104,3 +104,11 @@
 .conversation-menu button:hover{background:#304a47}
 .conversation-menu button:last-child{color:#f4aaa2}
 .stop-generation{min-height:42px;padding-inline:17px;margin-inline-start:auto}
+
+/* Final desktop 1440×900 alignment pass: Figma Chat 12/13 & Confirm Dialogs */
+@media (min-width:1101px) and (min-height:800px){.composer-zone{padding-bottom:57px}.messages{padding-top:85px}}
+.dialog{max-width:520px;width:min(520px,100%);min-height:260px;padding:28px 30px;border-radius:22px}
+.dialog-heading h2{font-size:23px;line-height:1.35}
+.dialog-description{font-size:15px;line-height:1.8}
+.dialog-actions{margin-top:25px;padding-top:24px}
+@media(max-height:780px){.welcome{padding-top:52px}.composer-zone{padding-bottom:18px}.messages{padding-top:30px}}
