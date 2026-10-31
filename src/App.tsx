@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUp, Check, ChevronDown, CircleHelp, Download, HardDrive, History, Menu, MessageSquare, MoreHorizontal, Plus, RefreshCw, Search, Settings, Trash2, WifiOff, X } from 'lucide-react';
 import { Dialog } from './components/Dialog';
-import { MessageContent } from './components/MessageContent';
+import { ChatBubble } from './components/ChatBubble';
 import { HistoryPanel, SettingsPanel, ShortcutsPanel, type SettingsSection } from './components/MvpPages';
 import { Onboarding, type SetupStep } from './components/Onboarding';
 import { buildChatMessages } from './lib/persona';
@@ -183,7 +183,7 @@ export function App() {
           <div className="suggestions">{([1, 2, 3] as const).map(n => <button className="suggestion" key={n} onClick={() => void send(i[`prompt${n}`])}>{i[`idea${n}`]}<span>↗</span></button>)}</div>
         </section>}
         {isReady && current?.messages.length ? <section className="messages" aria-label={i.history}>
-          {current.messages.map(m => <article className={'message ' + m.role} key={m.id}><div className="message-role">{m.role === 'user' ? (lang === 'ar' ? 'أنت' : 'You') : i.app}</div><MessageContent content={m.content}/></article>)}
+          {current.messages.map(m => <ChatBubble key={m.id} role={m.role} content={m.content} language={lang} assistantName={i.app} />)}
           {pending && <div className="thinking" role="status"><span className="dot-pulse"/>{i.stop}<button type="button" className="btn secondary stop-generation" onClick={()=>chatAbort.current?.abort()}>{lang==='ar'?'إيقاف التوليد':'Stop generating'}</button></div>}<div ref={endRef}/>
         </section> : null}
         <div className="composer-zone">

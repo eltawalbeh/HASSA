@@ -4,4 +4,5 @@ import { App } from './App';
 import './styles.css';
 import './figma-dark.css';
 import './phase2-states.css';
+import './chat-bubbles.css';
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
