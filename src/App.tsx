@@ -25,6 +25,7 @@ export function App() {
   const [setupModel, setSetupModel] = useState(SUGGESTED_MODEL);
   const [setupError, setSetupError] = useState('');
   const pullAbort = useRef<AbortController|null>(null);
+  const chatAbort = useRef<AbortController|null>(null);
   const firstSetup = useRef(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [engine, setEngine] = useState<EngineStatus>(EMPTY_ENGINE);
@@ -71,8 +72,8 @@ export function App() {
   function patchConversation(id: string, apply: (c: Conversation) => Conversation) {
     setPrefs(old => ({ ...old, conversations: old.conversations.map(c => c.id === id ? apply(c) : c) }));
   }
-  function newConversation() { setActiveId(null); setDraft(''); setPage('chat'); setNotice(''); requestAnimationFrame(() => composerRef.current?.focus()); }
-  function openChat(id: string) { setActiveId(id); setPage('chat'); setDraft(''); setNotice(''); }
+  function newConversation() { chatAbort.current?.abort(); setActiveId(null); setDraft(''); setPage('chat'); setNotice(''); requestAnimationFrame(() => composerRef.current?.focus()); }
+  function openChat(id: string) { chatAbort.current?.abort(); setActiveId(id); setPage('chat'); setDraft(''); setNotice(''); }
   function openRename(c: Conversation) { setRenameDraft(c.title); setModal({ type: 'rename-chat', id: c.id }); }
   function saveRename() {
     if (modal?.type !== 'rename-chat' || !renameDraft.trim()) return;
@@ -92,14 +93,15 @@ export function App() {
       setPrefs(old => ({ ...old, conversations: [item, ...old.conversations] }));
       setActiveId(id);
     } else patchConversation(id, c => ({ ...c, messages: nextMessages, updatedAt: now }));
-    setPending(true);
+    const controller=new AbortController();chatAbort.current=controller;setPending(true);
     try {
-      const reply = await sendChat(activeModel, buildChatMessages(nextMessages, lang, prefs), 0.15 + (prefs.creativity??50) / 100 * 1.05);
+      const reply = await sendChat(activeModel, buildChatMessages(nextMessages, lang, prefs), 0.15 + (prefs.creativity??50) / 100 * 1.05, controller.signal);
+      if(controller.signal.aborted)return;
       if (!reply.trim()) throw new Error(i.emptyResponse);
       const assistant: ChatMessage = { id: uid(), role: 'assistant', content: reply.trim(), createdAt: Date.now() };
       patchConversation(id, c => ({ ...c, messages: [...c.messages, assistant], updatedAt: Date.now() }));
-    } catch (e) { setNotice(e instanceof Error ? e.message : i.genericError); }
-    finally { setPending(false); }
+    } catch (e) { if(!controller.signal.aborted)setNotice(e instanceof Error ? e.message : i.genericError); }
+    finally {chatAbort.current=null;setPending(false); }
   }
   async function download(name: string) {
     const controller=new AbortController();pullAbort.current=controller;setDownloading(name);setProgress({model:name,status:i.downloading});setNotice('');
@@ -178,7 +180,7 @@ export function App() {
         </section>}
         {isReady && current?.messages.length ? <section className="messages" aria-label={i.history}>
           {current.messages.map(m => <article className={'message ' + m.role} key={m.id}><div className="message-role">{m.role === 'user' ? (lang === 'ar' ? 'أنت' : 'You') : i.app}</div><MessageContent content={m.content}/></article>)}
-          {pending && <div className="thinking" role="status"><span className="dot-pulse"/>{i.stop}</div>}<div ref={endRef}/>
+          {pending && <div className="thinking" role="status"><span className="dot-pulse"/>{i.stop}<button type="button" className="btn secondary stop-generation" onClick={()=>chatAbort.current?.abort()}>{lang==='ar'?'إيقاف التوليد':'Stop generating'}</button></div>}<div ref={endRef}/>
         </section> : null}
         <div className="composer-zone">
           <div className={'composer ' + (!isReady || pending ? 'composer-disabled' : '')}><label htmlFor="chat-composer" className="sr-only">{i.input}</label><textarea id="chat-composer" ref={composerRef} rows={2} value={draft} onChange={e => setDraft(e.target.value)} placeholder={i.input} disabled={!isReady || pending} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }}/><button className="send-button" aria-label={i.send} title={i.send} disabled={!isReady || pending || !draft.trim()} onClick={() => void send()}><ArrowUp size={20}/></button></div>

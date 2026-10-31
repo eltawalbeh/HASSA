@@ -12,7 +12,10 @@ export class EngineError extends Error { constructor(message: string) { super(me
 async function request(path: string, init?: RequestInit): Promise<Response> {
   const ctrl = new AbortController();
   const timeout = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+  const abortExternal=()=>ctrl.abort();
+  init?.signal?.addEventListener('abort',abortExternal,{once:true});
   try {
+    if(init?.signal?.aborted) throw new EngineError('Request cancelled.');
     const response = await fetch(`${BASE}${path}`, {
       ...init,
       signal: ctrl.signal,
@@ -25,9 +28,10 @@ async function request(path: string, init?: RequestInit): Promise<Response> {
     return response;
   } catch (error) {
     if (error instanceof EngineError) throw error;
+    if (init?.signal?.aborted) throw new EngineError('Request cancelled.');
     if (ctrl.signal.aborted) throw new EngineError('Ollama request timed out.');
     throw new EngineError(error instanceof Error ? error.message : 'Cannot connect to local Ollama.');
-  } finally { clearTimeout(timeout); }
+  } finally { clearTimeout(timeout); init?.signal?.removeEventListener('abort',abortExternal); }
 }
 async function jsonRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await request(path, init);
@@ -44,11 +48,16 @@ export async function listModels(): Promise<ModelInfo[]> {
   const obj = await jsonRequest<{models?: ModelInfo[]}>('/api/tags');
   return (obj.models ?? []).map(model => ({ name: model.name, size: model.size, modified_at: model.modified_at }));
 }
-export async function sendChat(model: string, messages: WireMessage[], temperature = 0.7): Promise<string> {
+export async function sendChat(model: string, messages: WireMessage[], temperature = 0.7, signal?: AbortSignal): Promise<string> {
   if (!model.trim()) throw new EngineError('Select a local model first.');
-  if (isTauri()) return invoke<string>('chat_with_model', { model, messages, temperature });
+  if (isTauri()) {
+    const onAbort=()=>{void invoke('cancel_chat').catch(()=>{});};
+    signal?.addEventListener('abort', onAbort, {once:true});
+    try {return await invoke<string>('chat_with_model', { model, messages, temperature });}
+    finally {signal?.removeEventListener('abort', onAbort);}
+  }
   const obj = await jsonRequest<{message?: {content?: string}}>('/api/chat', {
-    method: 'POST', body: JSON.stringify({ model, messages, stream: false, options: { temperature } }),
+    method: 'POST', body: JSON.stringify({ model, messages, stream: false, options: { temperature } }), signal,
   });
   return obj.message?.content ?? '';
 }

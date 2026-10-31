@@ -3,6 +3,8 @@ use tauri::{AppHandle, Emitter, Manager};
 use std::sync::atomic::{AtomicBool, Ordering};
 #[derive(Default)]
 struct DownloadControl { cancelled: AtomicBool }
+#[derive(Default)]
+struct ChatControl { cancel: tokio::sync::Notify }
 
 
 const BASE: &str = "http://127.0.0.1:11434";
@@ -43,11 +45,16 @@ async fn list_models() -> Result<Vec<ModelInfo>, String> {
     Ok(res.json::<ModelsResponse>().await.map_err(|e| e.to_string())?.models.unwrap_or_default())
 }
 #[tauri::command]
-async fn chat_with_model(model: String, messages: Vec<WireMessage>, temperature: Option<f32>) -> Result<String, String> {
+fn cancel_chat(app: AppHandle) { app.state::<ChatControl>().cancel.notify_waiters(); }
+#[tauri::command]
+async fn chat_with_model(app: AppHandle, model: String, messages: Vec<WireMessage>, temperature: Option<f32>) -> Result<String, String> {
     if model.trim().is_empty() { return Err("Select a model".into()); }
-    let response = client()?.post(format!("{BASE}/api/chat"))
-      .json(&serde_json::json!({"model":model,"messages":messages,"stream":false,"options":{"temperature":temperature.unwrap_or(0.7).clamp(0.0,2.0)}}))
-      .send().await.map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?;
+    let request = client()?.post(format!("{BASE}/api/chat"))
+      .json(&serde_json::json!({"model":model,"messages":messages,"stream":false,"options":{"temperature":temperature.unwrap_or(0.7).clamp(0.0,2.0)}}));
+    let response = tokio::select! {
+        result = request.send() => result.map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?,
+        _ = app.state::<ChatControl>().cancel.notified() => return Err("Request cancelled".into())
+    };
     let data: ChatResponse = response.json().await.map_err(|e| e.to_string())?;
     data.message.map(|m| m.content).ok_or_else(|| "No assistant reply".into())
 }
@@ -100,7 +107,8 @@ fn emit_progress_line(app: &AppHandle, model: &str, line: &[u8]) -> Result<(), S
 pub fn run() {
     tauri::Builder::default()
         .manage(DownloadControl::default())
-        .invoke_handler(tauri::generate_handler![check_engine, list_models, chat_with_model, delete_model, pull_model, cancel_pull])
+        .manage(ChatControl::default())
+        .invoke_handler(tauri::generate_handler![check_engine, list_models, chat_with_model, delete_model, pull_model, cancel_pull, cancel_chat])
         .run(tauri::generate_context!())
         .expect("error running HASSA desktop application");
 }
