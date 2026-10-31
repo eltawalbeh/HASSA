@@ -44,11 +44,11 @@ export async function listModels(): Promise<ModelInfo[]> {
   const obj = await jsonRequest<{models?: ModelInfo[]}>('/api/tags');
   return (obj.models ?? []).map(model => ({ name: model.name, size: model.size, modified_at: model.modified_at }));
 }
-export async function sendChat(model: string, messages: WireMessage[]): Promise<string> {
+export async function sendChat(model: string, messages: WireMessage[], temperature = 0.7): Promise<string> {
   if (!model.trim()) throw new EngineError('Select a local model first.');
-  if (isTauri()) return invoke<string>('chat_with_model', { model, messages });
+  if (isTauri()) return invoke<string>('chat_with_model', { model, messages, temperature });
   const obj = await jsonRequest<{message?: {content?: string}}>('/api/chat', {
-    method: 'POST', body: JSON.stringify({ model, messages, stream: false }),
+    method: 'POST', body: JSON.stringify({ model, messages, stream: false, options: { temperature } }),
   });
   return obj.message?.content ?? '';
 }
@@ -56,12 +56,14 @@ export async function deleteModel(name: string): Promise<void> {
   if (isTauri()) { await invoke('delete_model', { name }); return; }
   await request('/api/delete', { method: 'DELETE', body: JSON.stringify({ model: name }) });
 }
-export async function pullModel(name: string, onProgress: (p: PullProgress) => void): Promise<void> {
+export async function pullModel(name: string, onProgress: (p: PullProgress) => void, signal?: AbortSignal): Promise<void> {
   if (isTauri()) {
     const unlisten = await listen<PullProgress>('model-pull-progress', event => {
       if (event.payload.model === name) onProgress(event.payload);
     });
-    try { await invoke('pull_model', { name }); } finally { unlisten(); }
+    const cancel = () => { void invoke('cancel_pull').catch(()=>{}); };
+    signal?.addEventListener('abort', cancel, { once:true });
+    try { await invoke('pull_model', { name }); } finally { signal?.removeEventListener('abort', cancel); unlisten(); }
     return;
   }
   // Streaming pulls can take much longer than normal requests, so do not apply the 5-minute timeout.
@@ -69,7 +71,7 @@ export async function pullModel(name: string, onProgress: (p: PullProgress) => v
   try {
     response = await fetch(`${BASE}/api/pull`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: name, stream: true }),
+      body: JSON.stringify({ model: name, stream: true }), signal,
     });
   } catch (error) { throw new EngineError(error instanceof Error ? error.message : 'Ollama is not connected.'); }
   if (!response.ok || !response.body) throw new EngineError(`Ollama model download failed (HTTP ${response.status}).`);

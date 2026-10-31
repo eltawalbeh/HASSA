@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { Check, ChevronLeft, ChevronRight, Download, FileJson2, History, Info, Keyboard, Languages, MessageSquare, Search, Settings2, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react';
 import type { AppPreferences, Conversation, Language, ModelInfo } from '../types';
 
@@ -7,7 +7,7 @@ const title = (en: boolean, arText: string, enText: string) => en ? enText : arT
 function PageHeading({heading, sub}: {heading: string; sub: string}) {
   return <div className="page-intro"><h2>{heading}</h2><p>{sub}</p></div>;
 }
-function Setting({icon, name, description, control}: {icon: React.ReactNode; name: string; description?: string; control?: React.ReactNode}) {
+function Setting({icon, name, description, control}: {icon: ReactNode; name: string; description?: string; control?: ReactNode}) {
   return <div className="setting-row hassa-setting"><div className="setting-copy"><strong>{icon}{name}</strong>{description && <p>{description}</p>}</div>{control && <div className="setting-action">{control}</div>}</div>;
 }
 export function HistoryPanel({language,conversations,filter,onFilter,open,rename,remove}:{
@@ -20,7 +20,7 @@ export function HistoryPanel({language,conversations,filter,onFilter,open,rename
     <label className="history-search"><Search size={19}/><span className="sr-only">{title(en,'بحث في المحادثات','Search conversations')}</span><input value={filter} onChange={e=>onFilter(e.target.value)} placeholder={title(en,'ابحث عن عنوان أو كلمة...','Search by title or keyword...')} /></label>
     <div className="history-caption">{title(en,'اليوم','Conversations')} <span>{matching.length}</span></div>
     {matching.length ? <div className="history-list">{matching.map(c=><div className="history-card" key={c.id}>
-      <button className="history-open" onClick={()=>open(c.id)}><span className="history-title">{c.title}</span><span className="history-preview">{c.messages.findLast(m=>m.role==='assistant')?.content.slice(0,105) ?? c.messages.at(-1)?.content.slice(0,105) ?? ''}</span><span className="history-date">{new Date(c.updatedAt).toLocaleString(en?'en-GB':'ar-JO',{dateStyle:'medium',timeStyle:'short'})}</span></button>
+      <button className="history-open" onClick={()=>open(c.id)}><span className="history-title">{c.title}</span><span className="history-preview">{c.messages.filter(m=>m.role==='assistant').at(-1)?.content.slice(0,105) ?? c.messages.at(-1)?.content.slice(0,105) ?? ''}</span><span className="history-date">{new Date(c.updatedAt).toLocaleString(en?'en-GB':'ar-JO',{dateStyle:'medium',timeStyle:'short'})}</span></button>
       <div className="history-actions"><button className="icon-button" aria-label={title(en,'إعادة تسمية المحادثة','Rename conversation')} onClick={()=>rename(c)}><Settings2 size={18}/></button><button className="icon-button" aria-label={title(en,'حذف المحادثة','Delete conversation')} onClick={()=>remove(c)}><Trash2 size={18}/></button></div>
     </div>)}</div> : <div className="history-empty"><History size={32}/><h3>{title(en,filter?'ما لقينا محادثات مطابقة.':'ما في محادثات محفوظة بعد. ',filter?'No matching conversations.':'No saved conversations yet.')}</h3><p>{title(en,'جرّب كلمة ثانية أو امسح البحث.','Try another search or clear the field.')}</p>{filter&&<button className="btn secondary" onClick={()=>onFilter('')}>{title(en,'مسح البحث','Clear search')}</button>}</div>}
   </main>;
@@ -29,7 +29,7 @@ export function SettingsPanel({prefs,models,engineVersion,onLanguage,onPrefs,onS
   prefs: AppPreferences; models:ModelInfo[]; engineVersion:string|null; onLanguage:(l:Language)=>void; onPrefs:(patch:Partial<AppPreferences>)=>void; onSection:(s:SettingsSection)=>void; section:SettingsSection; onKeyboard:()=>void; onClear:()=>void; onExport:()=>void;
 }) {
   const en=prefs.language==='en', chevron=en?<ChevronRight size={17}/>:<ChevronLeft size={17}/>;
-  const items: Array<[SettingsSection,string,string,React.ReactNode]>=[
+  const items: Array<[SettingsSection,string,string,ReactNode]>=[
     ['general',title(en,'عام ومظهر','General & appearance'),title(en,'اللغة وشكل التطبيق','Language & appearance'),<Settings2 size={18}/>],
     ['intelligence',title(en,'الذكاء وأسلوب المحادثة','AI & response style'),title(en,'النموذج وطريقة الكلام','Model and response style'),<SlidersHorizontal size={18}/>],
     ['privacy',title(en,'الخصوصية والبيانات','Privacy & data'),title(en,'حفظ وتصدير ومسح المحادثات','Save, export, clear history'),<ShieldCheck size={18}/>],

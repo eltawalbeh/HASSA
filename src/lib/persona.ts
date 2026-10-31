@@ -1,4 +1,4 @@
-import type { Language } from '../types';
+import type { AppPreferences, Language } from '../types';
 
 export type ChatTurn = { role: 'system' | 'user' | 'assistant'; content: string };
 
@@ -24,6 +24,8 @@ RESPONSE QUALITY
 - Avoid adding a self-introduction or brand slogan to ordinary answers.
 - If asked about your origin, describe HASSA as a Jordanian product being developed around existing open/local models, not a proprietary Jordanian foundation model.`;
 
-export function buildChatMessages(history: ReadonlyArray<{ role: 'user' | 'assistant'; content: string }>, _uiLanguage: Language): ChatTurn[] {
-  return [{ role: 'system', content: HASSA_IDENTITY }, ...history.map(m => ({ role: m.role, content: m.content }))];
+export function buildChatMessages(history: ReadonlyArray<{ role: 'user' | 'assistant'; content: string }>, _uiLanguage: Language, prefs?: Pick<AppPreferences,'replyStyle'|'detailLevel'>): ChatTurn[] {
+  const tone = prefs?.replyStyle === 'formal' ? 'Use professional formal language unless the user requests otherwise.' : prefs?.replyStyle === 'concise' ? 'Be concise; use short direct answers unless the user requests more depth.' : 'Use a natural balanced tone suited to the user.';
+  const detail = prefs?.detailLevel === 'brief' ? 'Prefer brief answers.' : prefs?.detailLevel === 'detailed' ? 'Provide detailed practical explanations when appropriate.' : 'Balance depth and brevity.';
+  return [{ role: 'system', content: HASSA_IDENTITY + '\n\nCURRENT USER PREFERENCES (lower priority than explicit user requests):\n' + tone + '\n' + detail }, ...history.map(m => ({ role: m.role, content: m.content }))];
 }
