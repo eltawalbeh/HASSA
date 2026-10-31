@@ -15,7 +15,7 @@ struct ModelInfo { name: String, size: u64, modified_at: Option<String> }
 struct ModelsResponse { models: Option<Vec<ModelInfo>> }
 #[derive(Serialize, Deserialize)]
 struct WireMessage { role: String, content: String }
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 struct Progress { model: String, status: String, completed: Option<u64>, total: Option<u64>, percent: Option<u8>, error: Option<String> }
 #[derive(Deserialize)]
 struct ChatResponse { message: Option<WireMessage> }
