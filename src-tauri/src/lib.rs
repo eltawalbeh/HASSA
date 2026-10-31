@@ -51,9 +51,10 @@ async fn chat_with_model(app: AppHandle, model: String, messages: Vec<WireMessag
     if model.trim().is_empty() { return Err("Select a model".into()); }
     let request = client()?.post(format!("{BASE}/api/chat"))
       .json(&serde_json::json!({"model":model,"messages":messages,"stream":false,"options":{"temperature":temperature.unwrap_or(0.7).clamp(0.0,2.0)}}));
+    let chat_control = app.state::<ChatControl>();
     let response = tokio::select! {
         result = request.send() => result.map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?,
-        _ = app.state::<ChatControl>().cancel.notified() => return Err("Request cancelled".into())
+        _ = chat_control.cancel.notified() => return Err("Request cancelled".into())
     };
     let data: ChatResponse = response.json().await.map_err(|e| e.to_string())?;
     data.message.map(|m| m.content).ok_or_else(|| "No assistant reply".into())
