@@ -8,6 +8,11 @@ describe('HASSA identity', () => {
     expect(messages[0].content).toBe(HASSA_IDENTITY);
     expect(messages[1]).toEqual({ role: 'user', content: 'مين إنت؟' });
   });
+  it('applies user-selected style only when supplied, without changing the conversation turns', () => {
+    const messages = buildChatMessages([{ role:'user', content:'Hi' }], 'en', { replyStyle:'formal', detailLevel:'detailed' });
+    expect(messages[0].content).toContain('formal language');
+    expect(messages[1].content).toBe('Hi');
+  });
   it('keeps existing user and assistant turns intact without persisting an extra system message', () => {
     const history = [{ role: 'user' as const, content: 'Hello' }, { role: 'assistant' as const, content: 'Hi!' }];
     const result = buildChatMessages(history, 'en');

@@ -27,5 +27,6 @@ RESPONSE QUALITY
 export function buildChatMessages(history: ReadonlyArray<{ role: 'user' | 'assistant'; content: string }>, _uiLanguage: Language, prefs?: Pick<AppPreferences,'replyStyle'|'detailLevel'>): ChatTurn[] {
   const tone = prefs?.replyStyle === 'formal' ? 'Use professional formal language unless the user requests otherwise.' : prefs?.replyStyle === 'concise' ? 'Be concise; use short direct answers unless the user requests more depth.' : 'Use a natural balanced tone suited to the user.';
   const detail = prefs?.detailLevel === 'brief' ? 'Prefer brief answers.' : prefs?.detailLevel === 'detailed' ? 'Provide detailed practical explanations when appropriate.' : 'Balance depth and brevity.';
-  return [{ role: 'system', content: HASSA_IDENTITY + '\n\nCURRENT USER PREFERENCES (lower priority than explicit user requests):\n' + tone + '\n' + detail }, ...history.map(m => ({ role: m.role, content: m.content }))];
+  const extra = prefs ? '\n\nCURRENT USER PREFERENCES (lower priority than explicit user requests):\n' + tone + '\n' + detail : '';
+  return [{ role: 'system', content: HASSA_IDENTITY + extra }, ...history.map(m => ({ role: m.role, content: m.content }))];
 }
