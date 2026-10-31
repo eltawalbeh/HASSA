@@ -32,6 +32,7 @@ export function App() {
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [connecting, setConnecting] = useState(true);
   const [query, setQuery] = useState('');
+  const [menuOpen, setMenuOpen] = useState<string|null>(null);
   const [draft, setDraft] = useState('');
   const [pending, setPending] = useState(false);
   const [downloading, setDownloading] = useState<string | null>(null);
@@ -53,6 +54,7 @@ export function App() {
   useEffect(() => { if (!writePreferences(prefs)) setNotice(lang === 'ar' ? 'تعذر حفظ المحادثات على الجهاز.' : 'Could not save conversations locally.'); }, [prefs, lang]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [current?.messages.length, pending]);
   useEffect(() => { if (!connecting && engine.connected && !models.length && !conversations.length && !firstSetup.current) { firstSetup.current=true; setPage('onboarding'); } }, [connecting, engine.connected, models.length, conversations.length]);
+  useEffect(()=>{if(!menuOpen)return;const handler=(e:KeyboardEvent)=>{if(e.key==='Escape')setMenuOpen(null);};const outside=(e:MouseEvent)=>{if(!(e.target as Element)?.closest?.('.item-menu'))setMenuOpen(null);};document.addEventListener('keydown',handler);document.addEventListener('mousedown',outside);return()=>{document.removeEventListener('keydown',handler);document.removeEventListener('mousedown',outside);};},[menuOpen]);
   useEffect(() => { const keys=(e:KeyboardEvent)=>{ if(e.ctrlKey && !e.shiftKey && e.key.toLowerCase()==='n'){e.preventDefault();newConversation();} if(e.ctrlKey && !e.shiftKey && e.key.toLowerCase()==='k'){e.preventDefault();setPage('history');requestAnimationFrame(()=>document.querySelector<HTMLInputElement>('.history-search input')?.focus());} };document.addEventListener('keydown',keys);return()=>document.removeEventListener('keydown',keys); }, []);
 
   const refresh = useCallback(async () => {
@@ -72,9 +74,9 @@ export function App() {
   function patchConversation(id: string, apply: (c: Conversation) => Conversation) {
     setPrefs(old => ({ ...old, conversations: old.conversations.map(c => c.id === id ? apply(c) : c) }));
   }
-  function newConversation() { chatAbort.current?.abort(); setActiveId(null); setDraft(''); setPage('chat'); setNotice(''); requestAnimationFrame(() => composerRef.current?.focus()); }
-  function openChat(id: string) { chatAbort.current?.abort(); setActiveId(id); setPage('chat'); setDraft(''); setNotice(''); }
-  function openRename(c: Conversation) { setRenameDraft(c.title); setModal({ type: 'rename-chat', id: c.id }); }
+  function newConversation() { setMenuOpen(null); chatAbort.current?.abort(); setActiveId(null); setDraft(''); setPage('chat'); setNotice(''); requestAnimationFrame(() => composerRef.current?.focus()); }
+  function openChat(id: string) { setMenuOpen(null); chatAbort.current?.abort(); setActiveId(id); setPage('chat'); setDraft(''); setNotice(''); }
+  function openRename(c: Conversation) { setMenuOpen(null); setRenameDraft(c.title); setModal({ type: 'rename-chat', id: c.id }); }
   function saveRename() {
     if (modal?.type !== 'rename-chat' || !renameDraft.trim()) return;
     patchConversation(modal.id, c => ({ ...c, title: renameDraft.trim(), updatedAt: Date.now() })); setModal(null);
@@ -149,7 +151,7 @@ export function App() {
       <nav className="conversation-list" aria-label={i.history}>
         {filtered.length ? filtered.map(c => <div className={'conversation-entry ' + (activeId === c.id && page === 'chat' ? 'active' : '')} key={c.id}>
           <button className="conversation-link" onClick={() => openChat(c.id)} aria-current={activeId === c.id && page === 'chat' ? 'page' : undefined}><MessageSquare size={15}/><span title={c.title}>{c.title}</span></button>
-          <div className="item-menu"><button aria-label={i.renameConversation} title={i.renameConversation} onClick={() => openRename(c)}><MoreHorizontal size={17}/></button><button aria-label={i.removeConversation} title={i.removeConversation} onClick={() => setModal({ type: 'delete-chat', id: c.id })}><Trash2 size={14}/></button></div>
+          <div className="item-menu"><button aria-label={lang==='ar'?'إجراءات المحادثة':'Conversation actions'} title={lang==='ar'?'إجراءات المحادثة':'Conversation actions'} aria-haspopup="menu" aria-expanded={menuOpen===c.id} onClick={() => setMenuOpen(old=>old===c.id?null:c.id)}><MoreHorizontal size={18}/></button>{menuOpen===c.id && <div className="conversation-menu" role="menu"><button role="menuitem" onClick={()=>openRename(c)}><Settings size={15}/>{i.renameConversation}</button><button role="menuitem" onClick={()=>{setMenuOpen(null);setModal({type:'delete-chat',id:c.id});}}><Trash2 size={15}/>{i.removeConversation}</button></div>}</div>
         </div>) : <p className="empty-history">{query ? i.noResults : i.noChats}</p>}
       </nav>
       <div className="sidebar-bottom">

@@ -95,3 +95,12 @@
 [dir=ltr] .onboarding-note,[dir=ltr] .onboarding-sidebar p{direction:ltr}
 @media(max-width:1080px){.onboarding-sidebar{width:280px;min-width:280px;padding-inline:18px}.onboarding-body{padding-inline:30px}.onboarding-main h1{font-size:29px}}
 @media(prefers-reduced-motion:reduce){.history-card{transition:none}}
+
+/* Conversation action popover: Figma History Screen 29 */
+.item-menu{position:relative;z-index:auto}
+.item-menu:has(.conversation-menu){z-index:12}
+.conversation-menu{position:absolute;inset-inline-end:0;top:calc(100% + 6px);min-width:195px;padding:8px;display:grid;gap:4px;border-radius:12px;background:var(--hassa-surface-raised);border:1px solid var(--hassa-stroke-standard);box-shadow:0 14px 36px #0006;z-index:25}
+.conversation-menu button{display:flex;align-items:center;justify-content:flex-start;text-align:start;gap:11px;width:100%;min-height:44px;height:auto;font-size:13px;padding:8px 10px;border-radius:9px;color:var(--hassa-text-primary)}
+.conversation-menu button:hover{background:#304a47}
+.conversation-menu button:last-child{color:#f4aaa2}
+.stop-generation{min-height:42px;padding-inline:17px;margin-inline-start:auto}
