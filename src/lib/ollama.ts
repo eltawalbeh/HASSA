@@ -56,10 +56,34 @@ export async function sendChat(model: string, messages: WireMessage[], temperatu
     try {return await invoke<string>('chat_with_model', { model, messages, temperature });}
     finally {signal?.removeEventListener('abort', onAbort);}
   }
-  const obj = await jsonRequest<{message?: {content?: string}}>('/api/chat', {
-    method: 'POST', body: JSON.stringify({ model, messages, stream: false, options: { temperature } }), signal,
-  });
-  return obj.message?.content ?? '';
+  // Keep the abort controller alive while reading the response body (not only until headers).
+  const controller = new AbortController();
+  const cancel = () => controller.abort();
+  signal?.addEventListener('abort', cancel, { once: true });
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    if (signal?.aborted) throw new EngineError('Request cancelled.');
+    const response = await fetch(`${BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, messages, stream: false, options: { temperature } }),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '');
+      throw new EngineError(`Ollama HTTP ${response.status}${detail ? `: ${detail.slice(0, 300)}` : ''}`);
+    }
+    const data = await response.json() as { message?: { content?: string } };
+    return data.message?.content ?? '';
+  } catch (error) {
+    if (signal?.aborted) throw new EngineError('Request cancelled.');
+    if (controller.signal.aborted) throw new EngineError('Ollama response timed out.');
+    if (error instanceof EngineError) throw error;
+    throw new EngineError(error instanceof Error ? error.message : 'Ollama returned an invalid response.');
+  } finally {
+    clearTimeout(timeout);
+    signal?.removeEventListener('abort', cancel);
+  }
 }
 export async function deleteModel(name: string): Promise<void> {
   if (isTauri()) { await invoke('delete_model', { name }); return; }

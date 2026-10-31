@@ -56,7 +56,11 @@ async fn chat_with_model(app: AppHandle, model: String, messages: Vec<WireMessag
         result = request.send() => result.map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?,
         _ = chat_control.cancel.notified() => return Err("Request cancelled".into())
     };
-    let data: ChatResponse = response.json().await.map_err(|e| e.to_string())?;
+    // Keep the cancellation receiver active until the full (possibly long) response is decoded.
+    let data: ChatResponse = tokio::select! {
+        result = response.json() => result.map_err(|e| e.to_string())?,
+        _ = chat_control.cancel.notified() => return Err("Request cancelled".into()),
+    };
     data.message.map(|m| m.content).ok_or_else(|| "No assistant reply".into())
 }
 #[tauri::command]
