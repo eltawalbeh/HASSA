@@ -1,0 +1,68 @@
+name: HASSA Windows Desktop Verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src-tauri/**'
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'index.html'
+      - '.github/workflows/desktop-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows x64 / Tauri Desktop & NSIS Installer
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout HASSA
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Set up Rust (MSVC)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install frontend dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Check Rust commands on Windows
+        run: cargo check --locked
+        working-directory: src-tauri
+
+      - name: Build native Windows installer (unsigned test build)
+        run: npm run tauri -- build --bundles nsis
+
+      - name: Verify NSIS installer exists
+        shell: pwsh
+        run: |
+          $found = @(Get-ChildItem -Path 'src-tauri/target/release/bundle/nsis' -Filter '*-setup.exe' -ErrorAction SilentlyContinue)
+          if ($found.Count -eq 0) { throw 'No HASSA NSIS installer was created.' }
+          $found | ForEach-Object { Write-Output "Installer: $($_.Name) ($($_.Length) bytes)" }
+
+      - name: Save installer for private Windows smoke testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: HASSA-Windows-x64-Unsigned-Test
+          path: src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+          retention-days: 7
