@@ -45,6 +45,9 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Generate Windows icon resources from HASSA mark
+        run: npm run tauri -- icon src-tauri/icons/icon.png
+
       - name: Check Rust commands on Windows
         run: cargo check
         working-directory: src-tauri
