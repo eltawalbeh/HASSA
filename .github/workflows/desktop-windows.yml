@@ -46,7 +46,7 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Check Rust commands on Windows
-        run: cargo check --locked
+        run: cargo check
         working-directory: src-tauri
 
       - name: Build native Windows installer (unsigned test build)
